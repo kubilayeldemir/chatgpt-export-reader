@@ -434,19 +434,32 @@ def generate_html_index(conv_data, output_file):
 
 def main():
     script_dir = Path(__file__).parent
-    input_file = script_dir / 'conversations.json'
     output_dir = script_dir / 'conversations'
 
-    if not input_file.exists():
+    input_files = []
+
+    single_file = script_dir / 'conversations.json'
+    if single_file.exists():
+        input_files = [single_file]
+    else:
+        index = 0
+        while True:
+            chunk_file = script_dir / f'conversations-{index:03d}.json'
+            if not chunk_file.exists():
+                break
+            input_files.append(chunk_file)
+            index += 1
+
+    if not input_files:
         print("=" * 60)
-        print("ERROR: conversations.json not found!")
+        print("ERROR: No conversation export file found!")
         print("=" * 60)
         print()
         print("To use this tool:")
         print("1. Go to ChatGPT -> Settings -> Data Controls -> Export")
         print("2. Wait for the email with your download link")
         print("3. Download and unzip the export")
-        print("4. Copy conversations.json to this folder")
+        print("4. Copy conversations.json or conversations-000.json to this folder")
         print("5. Run this script again")
         print()
         return
@@ -456,12 +469,21 @@ def main():
     print("  ChatGPT Export Reader")
     print("=" * 60)
     print()
-    print(f"Reading {input_file}...")
+    if len(input_files) == 1:
+        print(f"Reading {input_files[0]}...")
+    else:
+        print(f"Reading {len(input_files)} chunked conversation files...")
     print("(This may take a moment for large exports)")
     print()
 
-    with open(input_file, 'r', encoding='utf-8') as f:
-        conversations = json.load(f)
+    conversations = []
+    for input_file in input_files:
+        with open(input_file, 'r', encoding='utf-8') as f:
+            file_conversations = json.load(f)
+        if isinstance(file_conversations, list):
+            conversations.extend(file_conversations)
+        else:
+            print(f"Warning: Skipping unexpected JSON format in {input_file}")
 
     print(f"Found {len(conversations)} conversations")
 
