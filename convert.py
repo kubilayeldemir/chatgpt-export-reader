@@ -18,6 +18,7 @@ import html
 from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
+from urllib.parse import quote
 
 
 def sanitize_filename(title, max_length=50):
@@ -366,9 +367,10 @@ def generate_html_index(conv_data, output_file):
             preview_escaped = escape_html(c['preview'])
             title_search = escape_js_string(c['title'].lower())
             preview_search = escape_js_string(c['preview'].lower())
+            href = f"./{quote(c['filename'])}"
 
             html_content += f'''                <div class="conversation" data-title="{title_search}" data-preview="{preview_search}">
-                    <a href="{c['filename']}">{title_escaped}</a>
+                <a href="{href}">{title_escaped}</a>
                     <div class="meta">{date_str} &bull; {c['message_count']} messages</div>
 '''
             if preview_escaped:
